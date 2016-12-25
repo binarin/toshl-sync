@@ -31,5 +31,5 @@ instance FromJSON ExtConfig
 readConfig :: IO ExtConfig
 readConfig = do
   home <- fromJust <$> lookupEnv "HOME"
-  cf <- decodeFile (home </> "toshl.yml") :: IO (Maybe ExtConfig)
+  cf <- decodeFile (home </> "toshl.yaml") :: IO (Maybe ExtConfig)
   return $ fromJust cf
