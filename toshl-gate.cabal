@@ -1,7 +1,7 @@
 name:                toshl-gate
 version:             0.1.0.0
 synopsis:            Initial project template from stack
-description:         Please see README.md
+description:         Please see README.org
 homepage:            https://github.com/githubuser/toshl-gate#readme
 license:             BSD3
 license-file:        LICENSE
@@ -10,7 +10,7 @@ maintainer:          example@example.com
 copyright:           2016 Author name here
 category:            Web
 build-type:          Simple
-extra-source-files:  README.md
+extra-source-files:  README.org
 cabal-version:       >=1.10
 
 library
@@ -19,18 +19,27 @@ library
                      , Config
                      , Toshl
   build-depends:       base >= 4.7 && < 5
+                     , protolude
                      , wreq
-                     , lens
                      , aeson
-                     , bytestring
-                     , persistent
-                     , persistent-sqlite
-                     , containers
-                     , data-default
                      , yaml
                      , text
                      , filepath
+                     , bytestring
+                     , lens
+                     , containers
+                     , time
+                     , Decimal
+                     , cassava
+                     , iconv
+                     , vector
+                     , strptime
   default-language:    Haskell2010
+  default-extensions: NoImplicitPrelude
+                    , OverloadedStrings
+                    , RecordWildCards
+                    , DeriveGeneric
+                    , ExtendedDefaultRules
 
 executable toshl-gate-exe
   hs-source-dirs:      app
@@ -38,7 +47,13 @@ executable toshl-gate-exe
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   build-depends:       base
                      , toshl-gate
+                     , protolude
   default-language:    Haskell2010
+  default-extensions: NoImplicitPrelude
+                    , OverloadedStrings
+                    , RecordWildCards
+                    , DeriveGeneric
+                    , ExtendedDefaultRules
 
 test-suite toshl-gate-test
   type:                exitcode-stdio-1.0
@@ -46,8 +61,14 @@ test-suite toshl-gate-test
   main-is:             Spec.hs
   build-depends:       base
                      , toshl-gate
+                     , protolude
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   default-language:    Haskell2010
+  default-extensions: NoImplicitPrelude
+                    , OverloadedStrings
+                    , RecordWildCards
+                    , DeriveGeneric
+                    , ExtendedDefaultRules
 
 source-repository head
   type:     git

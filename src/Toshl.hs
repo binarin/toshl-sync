@@ -1,7 +1,6 @@
-{-# LANGUAGE OverloadedStrings          #-}
-{-# LANGUAGE RecordWildCards            #-}
-
 module Toshl where
+
+import Protolude
 import Config
 
 import qualified Data.ByteString as B
@@ -10,7 +9,7 @@ import qualified Network.Wreq as W
 import qualified Data.Aeson as J
 import qualified Data.Text as T
 import Data.Text.Encoding (encodeUtf8)
-import Control.Lens
+import Control.Lens hiding ((&))
 
 type Method = T.Text
 type Param = (T.Text, [T.Text])

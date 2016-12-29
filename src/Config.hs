@@ -1,12 +1,12 @@
-{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE RecordWildCards #-}
 module Config ( readConfig
               , ExtConfig(ExtConfig)
               , baseUrl
               , token
               , Token(BasicAuthToken)
               ) where
+
+import Protolude
 
 import qualified Data.Aeson as J
 import qualified Data.Text as T

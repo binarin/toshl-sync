@@ -1,8 +1,6 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE DeriveGeneric #-}
-
 module Accounts where
 
+import Protolude
 import Data.Map as M
 import Data.Text as T
 import GHC.Generics
@@ -10,9 +8,10 @@ import Data.Aeson
 import Network.Wreq (asJSON, responseBody)
 import Control.Lens
 import Data.Maybe
+import Control.Arrow (left)
 
 import Config
-import Toshl
+import qualified Toshl
 
 data Account = Account { balance :: Float
                        -- , currency :: Text
@@ -24,7 +23,7 @@ data Account = Account { balance :: Float
 
 instance FromJSON Account
 
-getAccounts :: ExtConfig -> IO (Either String [Account])
+getAccounts :: ExtConfig -> IO (Either Text [Account])
 getAccounts c = do
-  r <- get c "accounts" []
-  return $ eitherDecode $ r ^. responseBody
+  r <- Toshl.get c "accounts" []
+  return $ left pack . eitherDecode $ r ^. responseBody
