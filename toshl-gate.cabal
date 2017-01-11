@@ -34,6 +34,8 @@ library
                      , iconv
                      , vector
                      , strptime
+                     , reflex
+                     , reflex-dom
   default-language:    Haskell2010
   default-extensions: NoImplicitPrelude
                     , OverloadedStrings
