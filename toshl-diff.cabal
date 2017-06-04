@@ -23,7 +23,9 @@ executable toshl-diff
                        bytestring,
                        cassava,
                        lens,
+                       raw-strings-qq,
                        text,
-                       time
+                       time,
+                       vector
   hs-source-dirs:      src
   default-language:    Haskell2010
