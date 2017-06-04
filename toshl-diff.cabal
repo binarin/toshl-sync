@@ -19,6 +19,11 @@ executable toshl-diff
   main-is:             Main.hs
   -- other-modules:       
   -- other-extensions:    
-  build-depends:       base >=4.9 && <4.10
+  build-depends:       base >=4.9 && <4.10,
+                       bytestring,
+                       cassava,
+                       lens,
+                       text,
+                       time
   hs-source-dirs:      src
   default-language:    Haskell2010
