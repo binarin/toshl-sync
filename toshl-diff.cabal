@@ -18,7 +18,7 @@ custom-setup
                            
 library
   hs-source-dirs: src
-  exposed-modules: Lib, Model, ToshlCSV, TinkoffCSV, CSVUtils, Reconcile
+  exposed-modules: Lib, Model, ToshlCSV, TinkoffCSV, CSVUtils, Reconcile, CLI, UI
   default-language:    Haskell2010
   build-depends:       Decimal,
                        base >=4.9 && <4.10,
@@ -26,14 +26,19 @@ library
                        cassava >= 0.4.5.1,
                        containers,
                        data-default,
+                       directory,
+                       extra,
                        file-embed,
+                       filepath,
                        hspec,
                        hspec-expectations-pretty-diff,
                        lens,
                        raw-strings-qq,
                        safe,
+                       stm,
                        text,
                        text-icu,
+                       threepenny-gui >= 0.8.0.0,
                        time,
                        vector
 

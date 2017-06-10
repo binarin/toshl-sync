@@ -1,6 +1,5 @@
 module Main where
 
-import Lib
+import CLI
 
-main :: IO ()
-main = someFunc
+main = run "/home/binarin/personal-workspace/toshl-store"

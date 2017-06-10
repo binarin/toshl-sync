@@ -16,7 +16,11 @@ import qualified Data.Vector as V
 import Model
 
 readCsv :: B.ByteString -> Either String [Transaction]
-readCsv b = V.toList . snd <$> decodeByName (BL.fromStrict b)
+readCsv b = V.toList . snd <$> decodeByName (BL.fromStrict $ withoutBOM)
+  where
+    withoutBOM
+     | decodeUtf8 (B.take 3 b) == "\xFEFF" = B.drop 3 b
+     | otherwise = b
 
 newtype AmericanDay = AmericanDay { unAmerican :: Day }
 
