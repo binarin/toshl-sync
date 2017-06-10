@@ -11,8 +11,7 @@ main = do
     traverse_ putStrLn args -- optionally print arguments
     nixLibDir <- lookupEnv "NIX_GHC_LIBDIR"
     case nixLibDir of
-      Just ld -> bracket (setEnv "GHC_PACKAGE_PATH" $ packagePath ld) (\() -> unsetEnv "GHC_PACKAGE_PATH") $ \() -> do
-                         putStrLn $ "HOH: " ++ ld
+      Just ld -> bracket (setEnv "GHC_PACKAGE_PATH" $ packagePath ld) (\() -> unsetEnv "GHC_PACKAGE_PATH") $ \() ->
                          doctest args
       Nothing ->
           doctest args
