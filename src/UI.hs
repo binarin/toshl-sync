@@ -1,7 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 module UI where
 
+import           Control.Monad (void)
+import qualified Data.Text as T
 import           Data.Time.Calendar
 import           Data.IORef
 import           Data.Time.Clock (UTCTime(utctDay), getCurrentTime)
@@ -31,6 +34,32 @@ incMonth (Month date) = let (y, m, _) = toGregorian date
         clampedInc y 12 = Month $ fromGregorian (y+1) 1 1
         clampedInc y m = Month $ fromGregorian y (m+1) 1
 
+transactionBrowser :: TransactionSource a => a -> UI Element
+transactionBrowser src =
+    do (picker, bperiod) <- periodPicker
+       accounts <- liftIO $ getAccounts src
+       (accountPicker, baccounts) <- accountPicker accounts
+       pure undefined
+
+listChanger :: Eq a => a -> Bool -> ([a] -> [a])
+listChanger elt False = filter (/= elt)
+listChanger elt True = (elt:)
+
+toggleButton :: T.Text -> UI (Element, Event Bool)
+toggleButton labelText =
+    do checkbox <- UI.input # set (attr "type") "checkbox"
+                            # set UI.checked True
+       label <- UI.label #+ [string $ T.unpack labelText, element checkbox]
+       return (label, UI.checkedChange checkbox)
+
+accountPicker :: [Account] -> UI (Element, Behavior [Account])
+accountPicker accounts =
+    do buttons <- traverse toggleButton accounts
+       container <- UI.div #+ (element . fst <$> buttons)
+       let changeEvents = zipWith (\acc (_, ev) -> listChanger acc <$> ev) accounts buttons
+           event = concatenate <$> unions changeEvents
+       selection <- accumB accounts event
+       pure (container, selection)
 
 periodPicker :: UI (Element, Behavior TimePeriod)
 periodPicker =
@@ -44,5 +73,5 @@ periodPicker =
        container <- UI.div
        UI.set UI.children [goLeftButton, currentElement, goRightButton] $ pure container
        textValue <- stepper initialValue currentValue
-       pure currentElement # sink text (show <$> textValue)
+       element currentElement # sink text (show <$> textValue)
        return $ (container, textValue)

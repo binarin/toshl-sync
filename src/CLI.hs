@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE DuplicateRecordFields #-}
 module CLI where
 
 import           Control.Concurrent.STM
@@ -19,13 +20,12 @@ import           UI
 import qualified ToshlCSV
 import           Model
 
-class TransactionSource a where
-  getAccounts :: a -> IO [Account]
-  getTransactions :: a -> Account -> Day -> Day -> IO [Transaction]
-
 data ToshlCSVSource = ToshlCSVSource { reportsDir :: FilePath
                                      } deriving (Show)
 
+
+data TinkoffCSVSource = TinkoffCSVSource { reportsDir :: FilePath
+                                         } deriving (Show)
 
 -- | Given starting and ending date, return a list of first days of
 -- months that are touched by that range.
@@ -63,10 +63,8 @@ instance TransactionSource ToshlCSVSource where
                            pure []
             Right trns -> pure trns
 
-
 run :: FilePath -> IO ()
 run store = do let database = ToshlCSVSource store
-               putStrLn $ show database
                startGUI defaultConfig (setup database)
 
 
@@ -76,8 +74,9 @@ setup database rootWindow =
        liftIO $ putStrLn $ show database
        let showItem item = UI.li #+ [ UI.string $ T.unpack item ]
        list <- UI.ul #+ fmap showItem accounts
-       picker <- periodPicker
+       (picker, _) <- periodPicker
+       (accountPicker, baccounts) <- accountPicker accounts
        UI.set UI.children
-              [ list, picker ]
+              [ list, picker, accountPicker ]
               (getBody rootWindow)
        return ()

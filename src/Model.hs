@@ -9,11 +9,17 @@ import           Data.Text (Text)
 import qualified Data.Text as T
 import           Data.Time.Calendar (Day)
 import Control.Lens
+import Data.Monoid ((<>))
 
 type Category = Text
 type Currency = Text
+
 data Amount = Amount !Decimal !Currency
-  deriving (Eq, Show)
+  deriving (Eq)
+
+instance Show Amount where
+  show (Amount am cur) = show am <> " " <> T.unpack cur
+
 type Tag = Text
 type Account = Text
 data Target = Category Text | Account Account
@@ -39,3 +45,18 @@ data ReportItem = ReportItem
 
 makeFields ''Transaction
 makeFields ''ReportItem
+
+class TransactionSource a where
+  getAccounts :: a -> IO [Account]
+  getTransactions :: a -> Account -> Day -> Day -> IO [Transaction]
+
+type Rule = [Transaction] -> [ReportItem] -> Maybe ([Transaction], [ReportItem], MatchedTransaction)
+
+type MatchedTransaction = ([Transaction], [ReportItem])
+
+data ReconcileResult = ReconcileResult { _reconcileResultMatched :: [MatchedTransaction]
+                                       , _reconcileResultNotRecorded :: [ReportItem]
+                                       , _reconcileResultUnknown :: [Transaction]
+                                       } deriving (Eq, Show)
+
+makeFields ''ReconcileResult

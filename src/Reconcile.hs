@@ -5,7 +5,6 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Reconcile ( reconcile
                  , Rule
-                 , ReconcileResult(..)
                  , simpleAccountMatcher
                  ) where
 
@@ -17,19 +16,9 @@ import           Control.Lens
 
 import           Model
 
-type MatchedTransaction = ([Transaction], [ReportItem])
-
-data ReconcileResult = ReconcileResult { _reconcileResultMatched :: [MatchedTransaction]
-                                       , _reconcileResultNotRecorded :: [ReportItem]
-                                       , _reconcileResultUnknown :: [Transaction]
-                                       } deriving (Eq, Show)
-
-makeFields ''ReconcileResult
-
 instance Default ReconcileResult where
   def = ReconcileResult [] [] []
 
-type Rule = [Transaction] -> [ReportItem] -> Maybe ([Transaction], [ReportItem], MatchedTransaction)
 
 reconcile :: [Rule] -> [Transaction] -> [ReportItem] -> ReconcileResult
 reconcile rules toshl bank = go toshl bank def
@@ -56,4 +45,4 @@ simpleAccountMatcher acc card trns@(t:ts) banks
         (bankCandidates, bankRemaining) = partition matcher banks
     in case bankCandidates of
          (b:bs) -> Just (ts, bs++bankRemaining, ([t], [b]))
-         _ -> Just undefined
+         _ -> Nothing
