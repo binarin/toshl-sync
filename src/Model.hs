@@ -4,12 +4,12 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Model where
 
-import Data.Decimal (Decimal)
+import           Data.Decimal
 import           Data.Text (Text)
 import qualified Data.Text as T
 import           Data.Time.Calendar (Day)
-import Control.Lens
-import Data.Monoid ((<>))
+import           Control.Lens
+import           Data.Monoid ((<>))
 
 type Category = Text
 type Currency = Text
@@ -50,7 +50,7 @@ class TransactionSource a where
   getAccounts :: a -> IO [Account]
   getTransactions :: a -> Account -> Day -> Day -> IO [Transaction]
 
-type Rule = [Transaction] -> [ReportItem] -> Maybe ([Transaction], [ReportItem], MatchedTransaction)
+type Rule = ReconcileResult -> ReconcileResult
 
 type MatchedTransaction = ([Transaction], [ReportItem])
 

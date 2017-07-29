@@ -13,6 +13,7 @@ custom-setup:
 
 dependencies:
 - Decimal
+- aeson
 - base >=4.9 && <4.10
 - bytestring
 - cassava
@@ -26,8 +27,15 @@ dependencies:
 - hspec
 - hspec-expectations-pretty-diff
 - lens
+- mtl
+- opaleye
+- optparse-applicative
+- optparse-text
+- postgresql-simple
+- product-profunctors
 - raw-strings-qq
 - safe
+- safe-exceptions
 - stm
 - text
 - text-icu
@@ -35,6 +43,7 @@ dependencies:
 - threepenny-gui >=0.8.0.0
 - time
 - vector
+- wreq
 
 _exe-ghc-options: &exe-ghc-options
 - -threaded

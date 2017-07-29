@@ -1,155 +1,57 @@
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE ExistentialQuantification #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
 module Main where
 
-import           Control.Lens hiding (children, set, (#), element)
 import           Control.Monad (void)
-import qualified Data.ByteString as B
-import           Data.List (intersperse, intercalate)
-import           Data.Maybe
-import           Data.Monoid
-import           Data.Text (Text)
-import qualified Data.Text as T
-import           Data.Time.Calendar
+import           Data.List (sortBy)
 import qualified Graphics.UI.Threepenny as UI
-import           Graphics.UI.Threepenny.Core
-import           TextShow
+import           Graphics.UI.Threepenny.Core hiding (Config)
+import qualified Options.Applicative.Text as OptT
+import qualified Options.Applicative as Opt
+import           Data.Monoid
+import Control.Lens ((^.))
 
-import           CLI hiding (setup)
-import           Model
-import           Reconcile
-import           TinkoffCSV
-import           UI
-
+import           Config
+import           ToshlAPI as API
 
 threepennyConfig = defaultConfig { jsCustomHTML = Just "index.html"
                                  , jsStatic = Just "www"
                                  }
 
-main = do let trnStore = ToshlCSVSource "/home/binarin/personal-workspace/toshl-store"
-          transactions <- getTransactions trnStore "tcs-credit" (fromGregorian 2017 05 01) (fromGregorian 2017 05 31)
-          let rules = [simpleAccountMatcher "tcs-credit" "*0723"
-                      ,simpleAccountMatcher "tcs-credit" "*2765"
-                      ]
-          report <- TinkoffCSV.readCsv <$> B.readFile "/home/binarin/personal-workspace/toshl-store/reports/2017-05-report-tcs-credit.csv"
-          case report of
-            Right items -> do let recResult = reconcile rules transactions items
-                              startGUI threepennyConfig (setup recResult)
-          return ()
+cmdlineParser :: Opt.Parser Config
+cmdlineParser = Config <$> OptT.textOption ( Opt.long "toshl-key" )
+                       <*> OptT.textOption ( Opt.long "toshl-url"
+                                          <> Opt.value "https://api.toshl.com/"
+                                          <> Opt.showDefault
+                                           )
 
-mkTabs :: Text -> [(Text, Element)] -> UI Element
-mkTabs tabId content =
-    do
-       container <- UI.div
-       menuItems <- sequence $ zipWith menuItem [1..] content
-       menu <- UI.div # set UI.class_ "ui tabular menu"
-                      #+ map element menuItems
-       tabItems <- sequence $ zipWith tabItem [1..] content
-       element container #+ (element menu:map element tabItems)
-       return container
-    where
-         tabIdString = T.unpack tabId
-         menuItem pos (text, _) = UI.div # set UI.class_ ("item" <> if pos == 1
-                                                                       then " active"
-                                                                       else "")
-                                         # set (attr "data-tab") (tabIdString ++ show pos)
-                                         #+ [string $ T.unpack text]
-         tabItem pos (text, subElement) =
-             UI.div # set UI.class_ ("ui tab" <> if pos == 1
-                                                       then " active"
-                                                       else "")
-                    # set (attr "data-tab") (tabIdString ++ show pos)
-                    #+ [element subElement]
+data AppState = AppState { window :: Window
+                         , config :: Config
+                         , content :: Element
+                         }
 
-data Column a = Column Text (a -> UI Element)
-              | Column' Text (a -> [UI Element])
+main = do config <- Opt.execParser $ Opt.info cmdlineParser mempty
+          startGUI threepennyConfig (setup config listAccounts)
 
-renderTable :: [Column a] -> [a] -> UI Element
-renderTable cols xs =
-    do thead <- UI.mkElement "thead" #+ [UI.tr #+ (mkHeadCell <$> cols)]
-       tbody <- UI.mkElement "tbody" #+ (makeRow <$> xs)
-       UI.table # set UI.class_ "ui celled table"
-                #+ [element thead, element tbody]
-    where
-         colName (Column n _) = n
-         colName (Column' n _) = n
-         makeRow x = UI.tr #+ (mkCell x <$> cols)
-         mkCell x (Column _ r) = UI.td #+ [r x]
-         mkCell x (Column' _ r) = UI.td #+ r x
-         mkHeadCell (Column t _) = UI.th #+ [string $ T.unpack t]
-         mkHeadCell (Column' t _) = UI.th #+ [string $ T.unpack t]
+setup :: Config -> (AppState -> UI ()) -> Window -> UI ()
+setup cfg continuation window = do
+    contentContainer <- UI.div # set UI.class_ "ui container"
+    getBody window #+ [element contentContainer]
+    let state = AppState window cfg contentContainer
+    continuation state
 
-mkMatchedTab :: [MatchedTransaction] -> UI Element
-mkMatchedTab xs =
-    do renderTable [Column' "Store" renderTrns
-                   ,Column' "Report" renderReport
-                   ] xs
-    where
-        renderTrns (trns, _) = intercalate [UI.hr] (map renderTrn trns)
-        renderReport (_, items) = intercalate [UI.hr] (map renderItem items)
-        renderItem it = [reportDateAmount it, UI.br, reportCardCatDesc it]
-        renderTrn trn = [dateAmount trn, UI.br, accountTagsDesc trn]
-        dateAmount trn = string $ show (trn^.date) <> " - " <> show (trn^.amount)
-        accountTagsDesc trn = string $ T.unpack (trn^.account) <> " - " <> tagsStr trn <> " - " <> descStr trn
-        tagsStr :: Transaction -> String
-        tagsStr trn = intercalate "," (T.unpack <$> (trn^.tags))
-        descStr trn = T.unpack $ fromMaybe "" (trn^.description)
-        reportDateAmount it = string $ show (it^.date) <> " - " <> show (it^.amount)
-        reportCardCatDesc it = string $ intercalate " - " (map (T.unpack . fromMaybe "") [it^.cardNo, it^.categoryName, it^.description])
+getAccounts :: MonadIO m => AppState -> m [Account]
+getAccounts st@AppState{..} =
+    do accs <- liftIO $ API.get config "accounts" []
+       pure $ sortBy (\a b -> (a^.order) `compare` (b^.order)) accs
 
+listAccounts :: AppState -> UI ()
+listAccounts st@AppState{..} =
+    void $ do accs <- getAccounts st
+              accsTable <- renderAccountsTable st accs
+              element content # set children [accsTable]
+              pure window # UI.set title "Toshl Diff"
 
-
-
-mkNotRecordedTab :: [ReportItem] -> UI Element
-mkNotRecordedTab xs =
-    do
-       renderTable [Column "Date" (renderShow date)
-                   ,Column "Card" (renderOptText cardNo)
-                   ,Column "Amount" (renderShow amount)
-                   ,Column "Category name" (renderOptText categoryName)
-                   ,Column "MCC" (renderOptShow mCC)
-                   ,Column "Description" (renderOptText description)
-                   ] xs
-    where
-      renderShow l x = string $ show $ x^.l
-      renderOptText l x = string $ T.unpack $ fromMaybe "" (x^.l)
-      renderOptShow l x = case (x^.l) of
-                            Nothing -> string ""
-                            Just card -> string $ show card
-
-mkUnknownTab :: [Transaction] -> UI Element
-mkUnknownTab ts =
-    do renderTable [Column "Date" (renderShow date)
-                   ,Column "Account" (renderAccount . (^.account))
-                   ,Column "Target" (renderTarget . (^.target))
-                   ,Column "Amount" (renderShow amount)
-                   ,Column "Tags" (renderTags . (^.tags))
-                   ,Column "Description" (renderDescription . (^.description))
-                   ] ts
-    where
-        renderShow l x = string $ show $ x^.l
-        renderAccount acc = string $ T.unpack acc
-        renderTarget (Category cat) = string $ "CAT:" <> T.unpack cat
-        renderTarget (Account acc) = string $ "ACC:" <> T.unpack acc
-        renderTags ts = string $ intercalate "," $ map T.unpack ts
-        renderDescription = string . T.unpack . fromMaybe ""
-
-setup :: ReconcileResult -> Window -> UI ()
-setup rr win = void $ do
-    pure win # set title "Toshl Reconcilation"
-    matchedTab <- mkMatchedTab (rr^.matched)
-    notRecordedTab <- mkNotRecordedTab (rr^.notRecorded)
-    unknownTab <- mkUnknownTab (rr^.unknown)
-    tabs <- mkTabs "reconcilation-tab-" [(tabHead "Matched" (rr^.matched), matchedTab)
-                                        ,(tabHead "Not recorded" (rr^.notRecorded), notRecordedTab)
-                                        ,(tabHead "Unknown" (rr^.unknown), unknownTab)
-                                        ]
-    getBody win #+ [UI.div # set UI.class_ "ui container" #+ [pure tabs]]
-    runFunction $ ffi "$('.tabular.menu .item').tab()"
-    pure ()
-  where
-    tabHead name xs = name <> " (" <> showt (length xs) <> ")"
+renderAccountsTable :: AppState -> [Account] -> UI Element
+renderAccountsTable st accs =
+    do undefined
+       undefined
