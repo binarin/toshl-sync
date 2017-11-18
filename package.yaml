@@ -1,0 +1,20 @@
+name: toshl-diff
+version: '0.1.0.0'
+category: Web
+author: Author name here
+maintainer: example@example.com
+copyright: 2017 Author name here
+license: UnspecifiedLicense
+homepage: https://github.com/githubuser/toshl-diff#readme
+extra-source-files:
+- README.md
+default-extensions:
+- NoImplicitPrelude
+- OverloadedStrings
+dependencies:
+- base >=4.7 && <5
+- foundation
+executables:
+  toshl-diff:
+    main: Main.hs
+    source-dirs: src
