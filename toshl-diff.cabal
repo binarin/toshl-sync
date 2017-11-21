@@ -9,19 +9,26 @@ homepage:       https://github.com/githubuser/toshl-diff#readme
 author:         Author name here
 maintainer:     example@example.com
 copyright:      2017 Author name here
-license:        UnspecifiedLicense
+license:        Apache-2.0
 build-type:     Simple
 cabal-version:  >= 1.10
 
 extra-source-files:
-    README.md
+    README.org
 
 executable toshl-diff
   main-is: Main.hs
   hs-source-dirs:
       src
-  default-extensions: NoImplicitPrelude OverloadedStrings
+      lib
+  default-extensions: OverloadedStrings OverloadedLists NoImplicitPrelude
   build-depends:
-      base >=4.7 && <5
-    , foundation
+      base-noprelude >=4.7 && <5
+    , classy-prelude
+    , text
+    , lens
+  other-modules:
+      Adapters.Service.Toshl.API
+      Entities.Toshl
+      Rules.Service.Toshl
   default-language: Haskell2010

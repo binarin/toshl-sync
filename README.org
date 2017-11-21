@@ -1,0 +1,5 @@
+* Architecture levels
+  - Entities - ~Entities~
+  - Business rules / use cases - ~Rules~
+  - Interface adapters - ~Adapters~
+  - Frameworks and drivers - ~Drivers~

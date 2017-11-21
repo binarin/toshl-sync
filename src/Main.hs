@@ -1,6 +1,6 @@
 module Main where
 
-import Foundation
+import ClassyPrelude
 
 main :: IO ()
 main = do
