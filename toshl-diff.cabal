@@ -27,8 +27,10 @@ executable toshl-diff
     , classy-prelude
     , text
     , lens
+    , threepenny-gui
   other-modules:
       Adapters.Service.Toshl.API
+      Drivers.ThreepennyMain
       Entities.Toshl
       Rules.Service.Toshl
   default-language: Haskell2010

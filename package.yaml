@@ -17,6 +17,7 @@ dependencies:
 - classy-prelude
 - text
 - lens
+- threepenny-gui
 executables:
   toshl-diff:
     main: Main.hs
